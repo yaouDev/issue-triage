@@ -42,3 +42,5 @@ jobs:
               }
             ]
           default-assignee: 'yaouDev'
+        env:
+          INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

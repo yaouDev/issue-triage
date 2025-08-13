@@ -11,12 +11,13 @@ if [ -z "$GH_TOKEN" ]; then
 fi
 echo "GH_TOKEN is set. Continuing with the action."
 
+# these wont be assigned if number, body, or title are empty - as intended
 ISSUE_NUMBER=$(jq --raw-output .issue.number "$GITHUB_EVENT_PATH")
 ISSUE_BODY=$(jq --raw-output .issue.body "$GITHUB_EVENT_PATH")
 ISSUE_TITLE=$(jq --raw-output .issue.title "$GITHUB_EVENT_PATH")
-ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels.[].name' || echo "") # must echo or will crash if there are not labels
+ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels.[].name' || echo "")
 
-CURRENT_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees --jq '.assignees.[].login')
+CURRENT_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees --jq '.assignees.[].login' || echo "")
 
 echo "Processing issue #$ISSUE_NUMBER: '$ISSUE_TITLE'"
 

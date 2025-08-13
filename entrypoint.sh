@@ -4,6 +4,8 @@ set -e
 set -x
 
 export GH_TOKEN="$INPUT_GITHUB_TOKEN"
+export GH_DEBUG=api
+
 
 if [ -z "$GH_TOKEN" ]; then
     echo "Error: GH_TOKEN is not set. The GitHub CLI will not be able to authenticate."

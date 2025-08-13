@@ -14,7 +14,7 @@ echo "GH_TOKEN is set. Continuing with the action."
 ISSUE_NUMBER=$(jq --raw-output .issue.number "$GITHUB_EVENT_PATH")
 ISSUE_BODY=$(jq --raw-output .issue.body "$GITHUB_EVENT_PATH")
 ISSUE_TITLE=$(jq --raw-output .issue.title "$GITHUB_EVENT_PATH")
-ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels.[].name')
+ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels.[].name' || echo "") # must echo or will crash if there are not labels
 
 CURRENT_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees --jq '.assignees.[].login')
 

@@ -16,7 +16,7 @@ jobs:
       - name: Advanced Issue Triage
         uses: ./
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
           stale-days: '30'
           close-days: '7'
           stale-message: 'This issue is stale because it has been open for {{ stale-days }} days with no activity. Remove the stale label or comment, otherwise this issue will be closed in {{ close-days }} days.'

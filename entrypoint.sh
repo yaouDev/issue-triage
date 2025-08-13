@@ -6,7 +6,6 @@ set -euo pipefail
 
 
 export GH_TOKEN="$INPUT_GITHUB_TOKEN"
-export GH_DEBUG=api
 
 
 if [ -z "$GH_TOKEN" ]; then

@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Advanced Issue Triage
-        uses: yaouDev@issue-triage@main
+        uses: yaouDev/issue-triage@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           assignment-rules: | # just testing the different groups (:

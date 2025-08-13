@@ -7,8 +7,8 @@ on:
     types: [opened, reopened]
 
 permissions:
-      issues: write
-      pull-requests: write
+  issues: write
+  pull-requests: write
 
 jobs:
   triage:
@@ -18,14 +18,13 @@ jobs:
         uses: actions/checkout@v4
     
       - name: Advanced Issue Triage
-        uses: ./
+        uses: ./ 
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           stale-days: '30'
           close-days: '7'
           stale-message: 'This issue is stale because it has been open for {{ stale-days }} days with no activity. Remove the stale label or comment, otherwise this issue will be closed in {{ close-days }} days.'
           close-message: 'This issue was closed because it has been inactive for a long time. Please reopen if this issue is still relevant.'
-
           assignment-rules: |
             [
               {

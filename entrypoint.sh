@@ -2,6 +2,8 @@
 
 set -e
 set -x
+set -euo pipefail
+
 
 export GH_TOKEN="$INPUT_GITHUB_TOKEN"
 export GH_DEBUG=api
@@ -72,6 +74,7 @@ if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_E
         if ! has_label "priority: high"; then
             echo "Applying label: priority: high"
             gh issue edit "$ISSUE_NUMBER" --add-label "priority: high"
+            echo 'PRIORITY HIGH TEST'
         fi
     fi
 

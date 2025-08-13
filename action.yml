@@ -6,6 +6,12 @@ branding:
     color: 'green'
 
 inputs:
+
+  github-token:
+    description: 'The GitHub token used for authentication to the GitHub API.'
+    required: true
+
+
   # labelling
 
   stale-days:

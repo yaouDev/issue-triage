@@ -1,0 +1,31 @@
+name: 'Issue Triage'
+
+on:
+  issues:
+    types: [opened, reopened]
+  schedule:
+    - cron: '0 0 * * *' # daily at midnight
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Advanced Issue Triage
+        uses: ./github/actions/triage
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          assignment-rules: | # just testing the different groups (:
+            [
+              {
+                "keywords": "critical,security,bug,enhancement,threat",
+                "assignees": "yaouDev"
+              },
+              {
+                "keywords": "suggestion,feature,request",
+                "assignees": "yaouDev"
+              }
+            ]
+          default-assignee: 'yaouDev'

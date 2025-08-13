@@ -76,7 +76,7 @@ if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_E
         fi
     fi
 
-    # 4. Automatic Assignment || assign the least busy assignee matched with keywords
+    # 4. Automatic Assignment || assign leasy busy matched assignee
     if ! has_assignees; then
         echo "Performing automatic assignment..."
         
@@ -105,12 +105,15 @@ if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_E
         }
 
         ASSIGNED_TO=""
-        if [[ "$ISSUE_BODY" =~ "frontend" ]]; then
-            ASSIGNED_TO=$(pick_least_busy_assignee "$INPUT_FRONTEND_ASSIGNEES")
-        elif [[ "$ISSUE_BODY" =~ "backend" ]]; then
-            ASSIGNED_TO=$(pick_least_busy_assignee "$INPUT_BACKEND_ASSIGNEES")
-        elif [[ "$ISSUE_BODY" =~ "database" ]]; then
-            ASSIGNED_TO=$(pick_least_busy_assignee "$INPUT_DATABASE_ASSIGNEES")
+        if [[ -n "$INPUT_ASSIGNMENT_RULES" ]]; then
+            echo "$INPUT_ASSIGNMENT_RULES" | jq -c '.[]' | while read -r rule; do
+                KEYWORDS=$(echo "$rule" | jq -r '.keywords')
+                ASSIGNEES=$(echo "$rule" | jq -r '.assignees')
+                if has_keyword "$KEYWORDS"; then
+                    ASSIGNED_TO=$(pick_least_busy_assignee "$ASSIGNEES")
+                    break
+                fi
+            done
         fi
 
         if [ -n "$ASSIGNED_TO" ]; then

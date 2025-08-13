@@ -13,6 +13,8 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Test Frontend Assignment and Labeling
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Creating test issue for frontend assignment..."
           gh issue create \
@@ -20,6 +22,8 @@ jobs:
             --body "I found a bug on the login page's frontend. The app crashes every time I try to submit the form without an email address. This is a critical issue."
 
       - name: Test Backend Assignment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Creating test issue for backend assignment..."
           gh issue create \
@@ -27,6 +31,8 @@ jobs:
             --body "We need to add a new API endpoint to handle user data. This is a backend task."
 
       - name: Test Documentation Labeling
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Creating test issue for documentation..."
           gh issue create \
@@ -34,6 +40,8 @@ jobs:
             --body "The README needs to be updated with new instructions for our team."
 
       - name: Test Default Assignment and Generic Bug Label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Creating test issue with no specific keywords..."
           gh issue create \
@@ -41,6 +49,8 @@ jobs:
             --body "I'm seeing a strange error when I try to save my profile. Not sure what's causing it."
 
       - name: Test "Needs More Info"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Creating a test issue that needs more info..."
           gh issue create \

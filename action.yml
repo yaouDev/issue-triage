@@ -1,0 +1,59 @@
+name: 'Advanced Issue Triage'
+description: 'A smart issue triage action for GitHub repositories.'
+author: 'yaouDev / August Jansson'
+branding:
+    icon: 'alert-circle'
+    color: 'green'
+
+inputs:
+  github-token:
+    description: 'A GitHub token with permissions to read/write issues.'
+    required: true
+  
+  # labelling
+
+  stale-days:
+    description: 'Number of days an issue can be inactive before being marked as stale. Set to 0 to disable.'
+    required: false
+    default: '30'
+  
+  close-days:
+    description: 'Number of days to wait after an issue is marked as stale before closing it. Set to 0 to disable.'
+    required: false
+    default: '7'
+  
+  stale-message:
+    description: 'The comment to add when an issue is marked as stale.'
+    required: false
+    default: 'This issue is stale because it has been open for {{ stale-days }} days with no activity. Remove the stale label or comment, otherwise this issue will be closed in {{ close-days }} days.'
+
+  close-message:
+    description: 'The comment to add when an issue is closed automatically.'
+    required: false
+    default: 'This issue was closed because it has been inactive for a long time. Please reopen if this issue is still relevant.'
+
+  # assignee management
+
+  frontend-assignees:
+    description: 'A comma-separated list of GitHub usernames for frontend issues.'
+    required: false
+    default: ''
+  
+  backend-assignees:
+    description: 'A comma-separated list of GitHub usernames for backend issues.'
+    required: false
+    default: ''
+  
+  database-assignees:
+    description: 'A comma-separated list of GitHub usernames for database issues.'
+    required: false
+    default: ''
+
+  default-assignee:
+    description: 'The GitHub username to assign if no keywords are matched.'
+    required: false
+    default: ''
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

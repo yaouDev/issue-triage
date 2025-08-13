@@ -18,8 +18,9 @@ jobs:
         
       - name: Advanced Issue Triage
         uses: yaouDev/issue-triage@main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           assignment-rules: | # just testing the different groups (:
             [
               {

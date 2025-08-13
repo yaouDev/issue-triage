@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 export GH_TOKEN="$INPUT_GITHUB_TOKEN"
 

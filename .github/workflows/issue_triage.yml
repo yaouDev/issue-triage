@@ -1,34 +1,46 @@
-name: 'Issue Triage'
+name: Issue Triage
 
 on:
+  schedule:
+    - cron: '0 0 * * *'
   issues:
     types: [opened, reopened]
-  schedule:
-    - cron: '0 0 * * *' # daily at midnight UTC
 
 jobs:
   triage:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
-        
+    
       - name: Advanced Issue Triage
         uses: ./
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-days: '30'
+          close-days: '7'
+          stale-message: 'This issue is stale because it has been open for {{ stale-days }} days with no activity. Remove the stale label or comment, otherwise this issue will be closed in {{ close-days }} days.'
+          close-message: 'This issue was closed because it has been inactive for a long time. Please reopen if this issue is still relevant.'
+
           assignment-rules: |
             [
               {
-                "keywords": "critical,security,bug,enhancement,threat",
+                "keywords": "bug,error,crash",
                 "assignees": "yaouDev"
               },
               {
-                "keywords": "suggestion,feature,request",
+                "keywords": "feature,enhancement",
+                "assignees": "yaouDev"
+              },
+              {
+                "keywords": "documentation,docs",
                 "assignees": "yaouDev"
               }
             ]
           default-assignee: 'yaouDev'
+          
+    env:
+          GH_TOKEN: ${{ github.token }}
+
+    permissions:
+      issues: write
+      pull-requests: write

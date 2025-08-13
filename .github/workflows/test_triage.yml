@@ -1,0 +1,48 @@
+name: Test Issue Triaging
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-and-verify-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Test Frontend Assignment and Labeling
+        run: |
+          echo "Creating test issue for frontend assignment..."
+          gh issue create \
+            --title "Bug Report: UI crash on login page" \
+            --body "I found a bug on the login page's frontend. The app crashes every time I try to submit the form without an email address. This is a critical issue."
+
+      - name: Test Backend Assignment
+        run: |
+          echo "Creating test issue for backend assignment..."
+          gh issue create \
+            --title "Enhancement: New backend API endpoint" \
+            --body "We need to add a new API endpoint to handle user data. This is a backend task."
+
+      - name: Test Documentation Labeling
+        run: |
+          echo "Creating test issue for documentation..."
+          gh issue create \
+            --title "Update the README docs" \
+            --body "The README needs to be updated with new instructions for our team."
+
+      - name: Test Default Assignment and Generic Bug Label
+        run: |
+          echo "Creating test issue with no specific keywords..."
+          gh issue create \
+            --title "Strange bug in user profile" \
+            --body "I'm seeing a strange error when I try to save my profile. Not sure what's causing it."
+
+      - name: Test "Needs More Info"
+        run: |
+          echo "Creating a test issue that needs more info..."
+          gh issue create \
+            --title "Something is broken" \
+            --body "I can't get it to work."

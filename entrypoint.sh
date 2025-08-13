@@ -2,8 +2,6 @@
 
 set -e
 
-export GH_TOKEN="${INPUT_GITHUB_TOKEN}"
-
 ISSUE_NUMBER=$(jq --raw-output .issue.number "$GITHUB_EVENT_PATH")
 ISSUE_BODY=$(jq --raw-output .issue.body "$GITHUB_EVENT_PATH")
 ISSUE_TITLE=$(jq --raw-output .issue.title "$GITHUB_EVENT_PATH")

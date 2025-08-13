@@ -11,6 +11,7 @@ RUN curl -sSLo /usr/local/bin/gh https://github.com/cli/cli/releases/download/v2
     rm -rf /tmp/gh_2.30.0_linux_amd64 /usr/local/bin/gh
 
 COPY entrypoint.sh .
+RUN sed -i 's/\r$//' /entrypoint.sh
 RUN chmod +x entrypoint.sh
 
 ENTRYPOINT ["/app/entrypoint.sh"]

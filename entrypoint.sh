@@ -5,6 +5,12 @@ set -x
 
 export GH_TOKEN="$INPUT_GITHUB_TOKEN"
 
+if [ -z "$GH_TOKEN" ]; then
+    echo "Error: GH_TOKEN is not set. The GitHub CLI will not be able to authenticate."
+    exit 1
+fi
+echo "GH_TOKEN is set. Continuing with the action."
+
 ISSUE_NUMBER=$(jq --raw-output .issue.number "$GITHUB_EVENT_PATH")
 ISSUE_BODY=$(jq --raw-output .issue.body "$GITHUB_EVENT_PATH")
 ISSUE_TITLE=$(jq --raw-output .issue.title "$GITHUB_EVENT_PATH")

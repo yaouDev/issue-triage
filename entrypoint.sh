@@ -30,7 +30,7 @@ PUSH_ACCESS=$(echo "$REPO_PERMS" | jq -r '.push')
 echo "Permissions for $GITHUB_REPOSITORY: $REPO_PERMS"
 
 if [[ "$ISSUES_WRITE" != "true" && "$PUSH_ACCESS" != "true" ]]; then
-  echo "❌ Error: GH_TOKEN does not have 'issues: write' or 'push' permissions. Please ensure:"
+  echo "Error: GH_TOKEN does not have 'issues: write' or 'push' permissions. Please ensure:"
   echo "  - Your workflow requests these permissions explicitly"
   echo "  - Repo settings allow workflows 'Read and write' access"
   exit 1

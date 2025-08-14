@@ -7,12 +7,30 @@ set -euo pipefail
 
 export GH_TOKEN="$INPUT_GITHUB_TOKEN"
 
-
+echo "Verifying GH_TOKEN..."
 if [ -z "$GH_TOKEN" ]; then
     echo "Error: GH_TOKEN is not set. The GitHub CLI will not be able to authenticate."
     exit 1
 fi
-echo "GH_TOKEN is set. Continuing with the action."
+echo "GH_TOKEN is set."
+
+echo "Verifying GitHub CLI authentication and permissions..."
+if ! gh auth status > /dev/null 2>&1; then
+    echo "❌ GitHub CLI is not authenticated properly."
+    gh auth status || true
+    exit 1
+fi
+
+echo "Checking repository permissions..."
+REPO_PERMS=$(gh api repos/"$GITHUB_REPOSITORY" --jq '.permissions')
+echo "Permissions for $GITHUB_REPOSITORY: $REPO_PERMS"
+
+HAS_ISSUES_WRITE=$(gh api repos/"$GITHUB_REPOSITORY" --jq '.permissions.issues')
+if [[ "$HAS_ISSUES_WRITE" != "true" ]]; then
+    echo "GH_TOKEN does not have 'issues: write' permission. Cannot label or edit issues."
+    exit 1
+fi
+
 
 # these wont be assigned if number, body, or title are empty - as intended
 ISSUE_NUMBER=$(jq --raw-output .issue.number "$GITHUB_EVENT_PATH")

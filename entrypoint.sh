@@ -5,7 +5,7 @@ set -x
 set -euo pipefail
 
 
-export GH_TOKEN="$INPUT_GITHUB_TOKEN"
+export GH_TOKEN="${GH_TOKEN:-$INPUT_GITHUB_TOKEN}"
 
 echo "Verifying GH_TOKEN..."
 if [ -z "$GH_TOKEN" ]; then
@@ -16,20 +16,26 @@ echo "GH_TOKEN is set."
 
 echo "Verifying GitHub CLI authentication and permissions..."
 if ! gh auth status > /dev/null 2>&1; then
-    echo "❌ GitHub CLI is not authenticated properly."
+    echo "GitHub CLI is not authenticated properly."
     gh auth status || true
     exit 1
 fi
 
 echo "Checking repository permissions..."
-REPO_PERMS=$(gh api repos/"$GITHUB_REPOSITORY" --jq '.permissions')
+
+REPO_PERMS=$(gh api repos/"$GITHUB_REPOSITORY" --jq .permissions)
+ISSUES_WRITE=$(echo "$REPO_PERMS" | jq -r '.issues')
+PUSH_ACCESS=$(echo "$REPO_PERMS" | jq -r '.push')
+
 echo "Permissions for $GITHUB_REPOSITORY: $REPO_PERMS"
 
-HAS_ISSUES_WRITE=$(gh api repos/"$GITHUB_REPOSITORY" --jq '.permissions.issues')
-if [[ "$HAS_ISSUES_WRITE" != "true" ]]; then
-    echo "GH_TOKEN does not have 'issues: write' permission. Cannot label or edit issues."
-    exit 1
+if [[ "$ISSUES_WRITE" != "true" && "$PUSH_ACCESS" != "true" ]]; then
+  echo "❌ Error: GH_TOKEN does not have 'issues: write' or 'push' permissions. Please ensure:"
+  echo "  - Your workflow requests these permissions explicitly"
+  echo "  - Repo settings allow workflows 'Read and write' access"
+  exit 1
 fi
+
 
 
 # these wont be assigned if number, body, or title are empty - as intended

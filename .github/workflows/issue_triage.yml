@@ -6,20 +6,21 @@ on:
   issues:
     types: [opened, reopened]
 
+permissions:
+  issues: write
+  pull-requests: write
+  repository-projects: read
+  contents: read
+
 jobs:
   triage:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
-      repository-projects: read
-      contents: read
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
     
       - name: Advanced Issue Triage
-        uses: ./ 
+        uses: ./
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           stale-days: '30'
@@ -42,5 +43,3 @@ jobs:
               }
             ]
           default-assignee: 'yaouDev'
-        env:
-          INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

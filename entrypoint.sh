@@ -5,7 +5,7 @@ set -x
 set -euo pipefail
 
 
-export GH_TOKEN="${GH_TOKEN:-${INPUT_GITHUB_TOKEN:-}}"
+export GH_TOKEN="${GH_TOKEN:-}"
 
 echo "Verifying GH_TOKEN..."
 if [ -z "$GH_TOKEN" ]; then

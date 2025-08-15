@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-set -x
+# set -x
 set -euo pipefail
 
 export GH_TOKEN="${GH_TOKEN:-}"
@@ -27,7 +27,7 @@ fi
 # check if label exists
 ensure_label_exists() {
     local label="$1"
-    local color="${2:-ededed}"        # Default GitHub label gray
+    local color="${2:-ededed}"
     local description="${3:-Auto-created by issue triage script}"
 
     if ! gh label list --limit 100 | grep -q "^$label[[:space:]]"; then
@@ -138,27 +138,30 @@ if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_E
             local min_issues=-1
 
             for assignee in "${ASSIGNEE_LIST[@]}"; do
-                local issue_count=$(gh issue list --search "is:open assignee:$assignee" --json number --jq '.[].number' | wc -l)
-                echo "  -> $assignee has $issue_count open issues."
+                local issue_count
+                issue_count=$(gh issue list --search "is:open assignee:$assignee" --json number --jq '.[].number' | wc -l)
+                >&2 echo "  -> $assignee has $issue_count open issues."
 
                 if [[ "$min_issues" -eq -1 || "$issue_count" -lt "$min_issues" ]]; then
                     min_issues="$issue_count"
                     least_busy_assignee="$assignee"
                 fi
             done
+
             echo "$least_busy_assignee"
         }
 
         ASSIGNED_TO=""
+
         if [[ -n "$ASSIGNMENT_RULES" ]]; then
-            echo "$ASSIGNMENT_RULES" | jq -c '.[]' | while read -r rule; do
+            while read -r rule; do
                 KEYWORDS=$(echo "$rule" | jq -r '.keywords')
                 ASSIGNEES=$(echo "$rule" | jq -r '.assignees')
                 if has_keyword "$KEYWORDS"; then
                     ASSIGNED_TO=$(pick_least_busy_assignee "$ASSIGNEES")
                     break
                 fi
-            done
+            done < <(echo "$ASSIGNMENT_RULES" | jq -c '.[]')
         fi
 
         if [ -n "$ASSIGNED_TO" ]; then

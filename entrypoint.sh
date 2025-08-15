@@ -10,6 +10,9 @@ export GITHUB_TOKEN="$GH_TOKEN"
 # needed to trust the workspace since initiator and runner are different users
 git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+# checks if the assignments are empty
+INPUT_ASSIGNMENT_RULES="${INPUT_ASSIGNMENT_RULES:-assignment_fail}"
+
 echo "Verifying GH_TOKEN..."
 if [ -z "$GH_TOKEN" ]; then
     echo "Error: GH_TOKEN is not set. The GitHub CLI will not be able to authenticate."

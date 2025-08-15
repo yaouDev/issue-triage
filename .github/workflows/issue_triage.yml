@@ -23,6 +23,12 @@ jobs:
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
+
+      - name: Debug GITHUB_TOKEN permissions
+        run: |
+            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/permissions/workflow
+
     
       - name: Advanced Issue Triage
         uses: yaouDev/issue-triage@main

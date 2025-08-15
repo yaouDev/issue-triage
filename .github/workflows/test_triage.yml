@@ -10,33 +10,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up GitHub CLI
-        uses: cli/cli-action@v2
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt-get update
+          sudo apt-get install gh -y
+
+      - name: Authenticate GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GH_TOKEN" | gh auth login --with-token
+          gh auth status
 
       - name: Simulate test issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Creating test issues to simulate various edge cases..."
-
-          gh issue create --title "Bug: App crashes on load" --body "There’s a crash when launching the app. Error: segmentation fault" || true
-
-          gh issue create --title "Feature: Add dark mode" --body "It would be great to have a dark mode. This is a feature request." || true
-
-          gh issue create --title "Question: What is the update interval?" --body "how to change the refresh rate?" || true
-
-          gh issue create --title "Short issue" --body "Bug!" || true
-
-          gh issue create --title "Docs: Clarify setup" --body "The documentation on setup is unclear. Please improve docs." || true
-
-          gh issue create --title "Enhancement: Optimize memory usage" --body "Feature request to reduce RAM consumption." || true
-
-          gh issue create --title "Security vulnerability found" --body "This is a critical security flaw in token handling." || true
-
-          gh issue create --title "Combination: Bug and Feature" --body "App crashes, but I also want new themes." || true
+          gh issue create --title "Bug: App crashes on load" --body "There’s a crash when launching the app. Error: segmentation fault"
+          gh issue create --title "Feature: Add dark mode" --body "It would be great to have a dark mode. This is a feature request."
+          gh issue create --title "Question: What is the update interval?" --body "how to change the refresh rate?"
+          gh issue create --title "Short issue" --body "Bug!"
+          gh issue create --title "Docs: Clarify setup" --body "The documentation on setup is unclear. Please improve docs."
+          gh issue create --title "Enhancement: Optimize memory usage" --body "Feature request to reduce RAM consumption."
+          gh issue create --title "Security vulnerability found" --body "This is a critical security flaw in token handling."
+          gh issue create --title "Combination: Bug and Feature" --body "App crashes, but I also want new themes."
 
           echo "Waiting for GitHub to register the issues..."
           sleep 15
+
 
   triage:
     runs-on: ubuntu-latest

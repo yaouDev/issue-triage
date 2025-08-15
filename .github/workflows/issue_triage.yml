@@ -17,6 +17,14 @@ jobs:
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
+
+      - name: Verify GitHub CLI Version
+        run: |
+          echo "Verifying gh version..."
+          /usr/local/bin/gh --version
+          
+          echo "Verifying gh path..."
+          which gh
       
       - name: Debug GITHUB_TOKEN permissions
         run: |

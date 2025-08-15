@@ -10,9 +10,6 @@ export GITHUB_TOKEN="$GH_TOKEN"
 # needed to trust the workspace since initiator and runner are different users
 git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-# checks if the assignments are empty
-INPUT_ASSIGNMENT_RULES="${INPUT_ASSIGNMENT_RULES:-assignment_fail}"
-
 echo "Verifying GH_TOKEN..."
 if [ -z "$GH_TOKEN" ]; then
     echo "Error: GH_TOKEN is not set. The GitHub CLI will not be able to authenticate."
@@ -137,12 +134,9 @@ if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_E
             echo "$least_busy_assignee"
         }
 
-        # debug
-        echo "INPUT_ASSIGNMENT_RULES: $INPUT_ASSIGNMENT_RULES"
-
         ASSIGNED_TO=""
-        if [[ -n "$INPUT_ASSIGNMENT_RULES" ]]; then
-            echo "$INPUT_ASSIGNMENT_RULES" | jq -c '.[]' | while read -r rule; do
+        if [[ -n "$ASSIGNMENT_RULES" ]]; then
+            echo "$ASSIGNMENT_RULES" | jq -c '.[]' | while read -r rule; do
                 KEYWORDS=$(echo "$rule" | jq -r '.keywords')
                 ASSIGNEES=$(echo "$rule" | jq -r '.assignees')
                 if has_keyword "$KEYWORDS"; then
@@ -155,19 +149,19 @@ if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_E
         if [ -n "$ASSIGNED_TO" ]; then
             echo "Assigning to $ASSIGNED_TO based on a matched keyword."
             gh issue edit "$ISSUE_NUMBER" --add-assignee "$ASSIGNED_TO"
-        elif [ -n "$INPUT_DEFAULT_ASSIGNEE" ]; then
-            echo "No keywords matched. Assigning to default assignee: $INPUT_DEFAULT_ASSIGNEE."
-            gh issue edit "$ISSUE_NUMBER" --add-assignee "$INPUT_DEFAULT_ASSIGNEE"
+        elif [ -n "$DEFAULT_ASSIGNEE" ]; then
+            echo "No keywords matched. Assigning to default assignee: $DEFAULT_ASSIGNEE."
+            gh issue edit "$ISSUE_NUMBER" --add-assignee "$DEFAULT_ASSIGNEE"
         fi
     fi
 fi
 
 # will only run as a scheduled flow
 if [[ "$GITHUB_EVENT_NAME" == "schedule" ]]; then
-    STALE_DAYS="${INPUT_STALE_DAYS}"
-    CLOSE_DAYS="${INPUT_CLOSE_DAYS}"
-    STALE_MSG="${INPUT_STALE_MESSAGE}"
-    CLOSE_MSG="${INPUT_CLOSE_MESSAGE}"
+    STALE_DAYS="${STALE_DAYS}"
+    CLOSE_DAYS="${CLOSE_DAYS}"
+    STALE_MSG="${STALE_MESSAGE}"
+    CLOSE_MSG="${CLOSE_MESSAGE}"
 
     echo "Running stale issue management..."
 

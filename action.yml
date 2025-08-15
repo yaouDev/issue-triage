@@ -63,3 +63,11 @@ inputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  # bash acts weird with kebab-case so we'll make the inputs env variables
+  env:
+    ASSIGNMENT_RULES: ${{ inputs.assignment-rules }}
+    STALE_DAYS: ${{ inputs.stale-days }}
+    CLOSE_DAYS: ${{ inputs.close-days }}
+    STALE_MESSAGE: ${{ inputs.stale-message }}
+    CLOSE_MESSAGE: ${{ inputs.close-message }}
+    DEFAULT_ASSIGNEE: ${{ inputs.default-assignee }}

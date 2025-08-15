@@ -163,25 +163,33 @@ if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_P
         echo "Checking assignment rules..."
         ASSIGNED_TO=""
 
-        if [[ -n "$ISSUE_LABELS" && -n "$CONFIG_JSON" ]]; then
-        while read -r rule; do
-            rule_labels=$(echo "$rule" | jq -r '.labels // empty | @csv' | tr -d '"')
-            rule_keywords=$(echo "$rule" | jq -r '.keywords // empty | @csv' | tr -d '"')
-            rule_assignees=$(echo "$rule" | jq -r '.assignees | join(",")')
+        if [[ -n "$CONFIG_JSON" ]]; then
+            while read -r rule; do
+                rule_labels=$(echo "$rule" | jq -r '.labels // [] | @csv' | tr -d '"')
+                rule_keywords=$(echo "$rule" | jq -r '.keywords // [] | @csv' | tr -d '"')
+                rule_assignees=$(echo "$rule" | jq -r '.assignees | join(",")')
 
-            for lbl in $(echo "$rule_labels" | tr ',' '\n'); do
-            if has_label "$lbl"; then
-                ASSIGNED_TO=$(pick_least_busy_assignee "$rule_assignees")
-                break 2
-            fi
-            done
+                matched=false
 
-            if has_keyword "$rule_keywords"; then
-            ASSIGNED_TO=$(pick_least_busy_assignee "$rule_assignees")
-            break
-            fi
+                for lbl in $(echo "$rule_labels" | tr ',' '\n'); do
+                    if has_label "$lbl"; then
+                        matched=true
+                        break
+                    fi
+                done
 
-        done < <(echo "$CONFIG_JSON" | jq -c '.assignments[]')
+                if [[ "$matched" == "false" && -n "$rule_keywords" ]]; then
+                    if has_keyword "$rule_keywords"; then
+                        matched=true
+                    fi
+                fi
+
+                if [[ "$matched" == "true" && -n "$rule_assignees" ]]; then
+                    ASSIGNED_TO=$(pick_least_busy_assignee "$rule_assignees")
+                    break
+                fi
+
+            done < <(echo "$CONFIG_JSON" | jq -c '.assignments[]')
         fi
 
         if [ -n "$ASSIGNED_TO" ]; then

@@ -1,0 +1,63 @@
+{
+  "labels": [
+    {
+      "name": "bug",
+      "color": "d73a4a",
+      "description": "Something isn't working",
+      "keywords": ["bug", "error", "crash"]
+    },
+    {
+      "name": "enhancement",
+      "color": "a2eeef",
+      "description": "New feature or request",
+      "keywords": ["feature", "enhancement", "new functionality"]
+    },
+    {
+      "name": "documentation",
+      "color": "0075ca",
+      "description": "Improvements or additions to documentation",
+      "keywords": ["docs", "documentation"]
+    },
+    {
+      "name": "question",
+      "color": "d876e3",
+      "description": "Further information is requested",
+      "keywords": ["question", "how to", "what is"]
+    },
+    {
+      "name": "priority: high",
+      "color": "b60205",
+      "description": "High priority issue",
+      "keywords": ["critical", "security"]
+    },
+    {
+      "name": "needs more info",
+      "color": "fef2c0",
+      "description": "Needs more input from the author",
+      "keywords": []
+    }
+  ],
+  "assignments": [
+    {
+      "keywords": ["bug", "error", "crash"],
+      "assignees": ["yaouDev", "alice"]
+    },
+    {
+      "keywords": ["feature", "enhancement", "new functionality"],
+      "assignees": ["yaouDev", "bob"]
+    },
+    {
+      "keywords": ["documentation", "docs"],
+      "assignees": ["yaouDev"]
+    },
+    {
+      "keywords": ["question", "how to", "what is"],
+      "assignees": ["yaouDev"]
+    },
+    {
+      "keywords": ["critical", "security"],
+      "assignees": ["security-team"]
+    }
+  ],
+  "defaultAssignee": "yaouDev"
+}

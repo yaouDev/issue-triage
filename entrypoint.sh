@@ -15,6 +15,9 @@ if [ -z "$GH_TOKEN" ]; then
 fi
 echo "GH_TOKEN is set."
 
+echo "Authenticating GitHub CLI using GH_TOKEN..."
+echo "$GH_TOKEN" | gh auth login --with-token > /dev/null
+
 echo "Verifying GitHub CLI authentication and permissions..."
 if ! gh auth status > /dev/null 2>&1; then
     echo "GitHub CLI is not authenticated properly."

@@ -28,6 +28,11 @@ inputs:
     required: false
     default: 'This issue was closed because it has been inactive for a long time. Please reopen if this issue is still relevant.'
 
+  issue-index:
+    description: 'An optional forced issue number'
+    required: false
+    default: ''
+
   # assignee management
   
   #assignment-rules: |
@@ -71,3 +76,4 @@ runs:
     STALE_MESSAGE: ${{ inputs.stale-message }}
     CLOSE_MESSAGE: ${{ inputs.close-message }}
     DEFAULT_ASSIGNEE: ${{ inputs.default-assignee }}
+    ISSUE_INDEX: ${{ inputs.issue-index }}

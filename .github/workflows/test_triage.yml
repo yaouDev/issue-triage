@@ -1,52 +1,80 @@
-name: 'Test Issue Triage'
+name: Triage Test
 
 on:
   workflow_dispatch:
-    inputs:
-      title:
-        description: 'Issue Title'
-        required: true
-        default: 'Test: A new bug was found'
-      body:
-        description: 'Issue Body'
-        required: true
-        default: 'Steps to reproduce: ... Expected behavior: ...'
 
 jobs:
-  test_triage:
+  simulate-issues:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
     steps:
-      - name: Create a dummy issue
-        id: create_issue
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up GitHub CLI
+        uses: cli/cli-action@v2
+
+      - name: Simulate test issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ISSUE_NUMBER=$(gh issue create --title "${{ github.event.inputs.title }}" --body "${{ github.event.inputs.body }}" --repo ${{ github.repository }} --json number | jq -r .number)
-          echo "Created issue #$ISSUE_NUMBER"
-          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-      
-      - name: Run Advanced Issue Triage on the created issue
+          echo "Creating test issues to simulate various edge cases..."
+
+          gh issue create --title "Bug: App crashes on load" --body "There’s a crash when launching the app. Error: segmentation fault" || true
+
+          gh issue create --title "Feature: Add dark mode" --body "It would be great to have a dark mode. This is a feature request." || true
+
+          gh issue create --title "Question: What is the update interval?" --body "how to change the refresh rate?" || true
+
+          gh issue create --title "Short issue" --body "Bug!" || true
+
+          gh issue create --title "Docs: Clarify setup" --body "The documentation on setup is unclear. Please improve docs." || true
+
+          gh issue create --title "Enhancement: Optimize memory usage" --body "Feature request to reduce RAM consumption." || true
+
+          gh issue create --title "Security vulnerability found" --body "This is a critical security flaw in token handling." || true
+
+          gh issue create --title "Combination: Bug and Feature" --body "App crashes, but I also want new themes." || true
+
+          echo "Waiting for GitHub to register the issues..."
+          sleep 15
+
+  triage:
+    runs-on: ubuntu-latest
+    needs: simulate-issues
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Issue Triage
         uses: yaouDev/issue-triage@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-days: '30'
+          close-days: '7'
+          stale-message: 'This issue is stale because it has been open for {{ stale-days }} days with no activity. Remove the stale label or comment, otherwise this issue will be closed in {{ close-days }} days.'
+          close-message: 'This issue was closed because it has been inactive for a long time. Please reopen if this issue is still relevant.'
           assignment-rules: |
             [
               {
-                "keywords": "bug,error",
-                "assignees": "user1,user2"
+                "keywords": "bug,error,crash,segmentation fault",
+                "assignees": "yaouDev"
               },
               {
-                "keywords": "test",
-                "assignees": "your-username"
+                "keywords": "feature,enhancement,request",
+                "assignees": "yaouDev"
+              },
+              {
+                "keywords": "documentation,docs",
+                "assignees": "yaouDev"
+              },
+              {
+                "keywords": "question,how to,what is",
+                "assignees": "yaouDev"
+              },
+              {
+                "keywords": "security,critical",
+                "assignees": "yaouDev"
               }
             ]
-      
-      - name: Clean up the dummy issue
-        if: always()
+          default-assignee: 'yaouDev'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Closing the dummy issue..."
-          gh issue close ${{ steps.create_issue.outputs.issue_number }}

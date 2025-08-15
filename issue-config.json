@@ -39,23 +39,27 @@
   ],
   "assignments": [
     {
-      "keywords": ["bug", "error", "crash"],
+      "labels": ["bug"],
       "assignees": ["yaouDev"]
     },
     {
-      "keywords": ["feature", "enhancement", "new functionality"],
+      "keywords": [],
+      "labels": ["enhancement"],
       "assignees": ["yaouDev"]
     },
     {
       "keywords": ["documentation", "docs"],
+      "labels": ["documentation"],
       "assignees": ["yaouDev"]
     },
     {
       "keywords": ["question", "how to", "what is"],
+      "labels": ["question"],
       "assignees": ["yaouDev"]
     },
     {
       "keywords": ["critical", "security"],
+      "labels": ["priority: high"],
       "assignees": []
     }
   ],

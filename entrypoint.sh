@@ -160,33 +160,36 @@ if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_P
             echo "$least_busy_assignee"
         }
 
+        echo "Checking assignment rules..."
         ASSIGNED_TO=""
 
-        assignments_count=$(jq '.assignments | length' <<< "$CONFIG_JSON")
-        for ((j=0; j<assignments_count; j++)); do
-            KEYWORDS=$(jq -r ".assignments[$j].keywords | join(\",\")" <<< "$CONFIG_JSON")
-            ASSIGNEES=$(jq -r ".assignments[$j].assignees | join(\",\")" <<< "$CONFIG_JSON")
+        if [[ -n "$ISSUE_LABELS" && -n "$CONFIG_JSON" ]]; then
+        while read -r rule; do
+            rule_labels=$(echo "$rule" | jq -r '.labels // empty | @csv' | tr -d '"')
+            rule_keywords=$(echo "$rule" | jq -r '.keywords // empty | @csv' | tr -d '"')
+            rule_assignees=$(echo "$rule" | jq -r '.assignees | join(",")')
 
-            IFS=',' read -ra kws <<< "$KEYWORDS"
-            for kw in "${kws[@]}"; do
-                kw="${kw,,}"
-                if [[ "$issue_text" =~ $kw ]]; then
-                    ASSIGNED_TO=$(pick_least_busy_assignee "$ASSIGNEES")
-                    break 2
-                fi
+            for lbl in $(echo "$rule_labels" | tr ',' '\n'); do
+            if has_label "$lbl"; then
+                ASSIGNED_TO=$(pick_least_busy_assignee "$rule_assignees")
+                break 2
+            fi
             done
-        done
 
-        DEFAULT_ASSIGNEE=$(jq -r '.defaultAssignee // empty' <<< "$CONFIG_JSON")
+            if has_keyword "$rule_keywords"; then
+            ASSIGNED_TO=$(pick_least_busy_assignee "$rule_assignees")
+            break
+            fi
+
+        done < <(echo "$CONFIG_JSON" | jq -c '.assignments[]')
+        fi
 
         if [ -n "$ASSIGNED_TO" ]; then
-            echo "Assigning to $ASSIGNED_TO based on matched keywords."
-            gh issue edit "$ISSUE_NUMBER" --add-assignee "$ASSIGNED_TO"
+        echo "Assigning to $ASSIGNED_TO based on matched rule."
+        gh issue edit "$ISSUE_NUMBER" --add-assignee "$ASSIGNED_TO"
         elif [ -n "$DEFAULT_ASSIGNEE" ]; then
-            echo "No keywords matched. Assigning to default assignee: $DEFAULT_ASSIGNEE."
-            gh issue edit "$ISSUE_NUMBER" --add-assignee "$DEFAULT_ASSIGNEE"
-        else
-            echo "No assignment rules matched and no default assignee set."
+        echo "No match found. Assigning to default: $DEFAULT_ASSIGNEE"
+        gh issue edit "$ISSUE_NUMBER" --add-assignee "$DEFAULT_ASSIGNEE"
         fi
     fi
 fi

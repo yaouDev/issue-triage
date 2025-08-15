@@ -6,6 +6,7 @@ set -euo pipefail
 
 export GH_TOKEN="${GH_TOKEN:-}"
 export GITHUB_TOKEN="$GH_TOKEN"
+EVENT_PATH="${CUSTOM_EVENT_PATH:-$GITHUB_EVENT_PATH}"
 
 # needed to trust the workspace since initiator and runner are different users
 git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -36,9 +37,14 @@ ensure_label_exists() {
     fi
 }
 
-ISSUE_NUMBER=$(jq --raw-output .issue.number "$GITHUB_EVENT_PATH")
-ISSUE_BODY=$(jq --raw-output .issue.body "$GITHUB_EVENT_PATH")
-ISSUE_TITLE=$(jq --raw-output .issue.title "$GITHUB_EVENT_PATH")
+if [[ -f "$EVENT_PATH" && "$GITHUB_EVENT_NAME" == "issues" ]]; then
+  ISSUE_NUMBER=$(jq -r .issue.number "$EVENT_PATH")
+  ISSUE_BODY=$(jq -r .issue.body "$EVENT_PATH")
+  ISSUE_TITLE=$(jq -r .issue.title "$EVENT_PATH")
+else
+  ISSUE_NUMBER="${INPUT_ISSUE_NUMBER:?Issue number required}"
+  read -r ISSUE_NUMBER ISSUE_TITLE ISSUE_BODY << (gh issue view "$ISSUE_NUMBER" --json number,title,body --jq '. | "\(.number)\t\(.title)\t\(.body)"')
+fi
 ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels.[].name' || echo "")
 CURRENT_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees --jq '.assignees.[].login' || echo "")
 
@@ -67,8 +73,7 @@ has_keyword() {
     return 1
 }
 
-
-if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_EVENT_PATH")" == "opened" || "$(jq --raw-output .action "$GITHUB_EVENT_PATH")" == "reopened") ]]; then
+if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_PATH")" == "opened" || "$(jq --raw-output .action "$EVENT_PATH")" == "reopened")) || ("$GITHUB_EVENT_NAME" == "workflow_dispatch") ]]; then
 
     echo "Performing automatic categorization..."
 

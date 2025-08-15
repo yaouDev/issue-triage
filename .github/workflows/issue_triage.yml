@@ -2,6 +2,10 @@ name: Issue Triage
 
 on:
   workflow_dispatch:
+    inputs:
+        issue_number:
+            description: 'Issue to triage (issue number)'
+            required: true
   schedule:
     - cron: '0 0 * * *'
   issues:
@@ -29,20 +33,6 @@ jobs:
         run: |
             curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/actions/permissions/workflow
-
-      - name: Triage all untriaged issues (manual dispatch only)
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "Fetching untriaged issues (no labels, no assignees)..."
-          issues=$(gh issue list --state open --json number,labels,assignees --jq '.[] | select((.labels | length) == 0 and (.assignees | length) == 0) | .number')
-
-          for issue in $issues; do
-            echo "Triggering triage for issue #$issue"
-            gh issue comment "$issue" --body "Running triage..."
-          done
-        env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     
       - name: Advanced Issue Triage
         uses: yaouDev/issue-triage@main

@@ -43,7 +43,7 @@ if [[ -f "$EVENT_PATH" && "$GITHUB_EVENT_NAME" == "issues" ]]; then
   ISSUE_TITLE=$(jq -r .issue.title "$EVENT_PATH")
 else
   ISSUE_NUMBER="${INPUT_ISSUE_NUMBER:?Issue number required}"
-  read -r ISSUE_NUMBER ISSUE_TITLE ISSUE_BODY << (gh issue view "$ISSUE_NUMBER" --json number,title,body --jq '. | "\(.number)\t\(.title)\t\(.body)"')
+  read -r ISSUE_NUMBER ISSUE_TITLE ISSUE_BODY < <(gh issue view "$ISSUE_NUMBER" --json number,title,body --jq '. | "\(.number)\t\(.title)\t\(.body)"')
 fi
 ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels.[].name' || echo "")
 CURRENT_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees --jq '.assignees.[].login' || echo "")

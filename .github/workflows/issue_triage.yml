@@ -3,7 +3,7 @@ name: Issue Triage
 on:
   workflow_dispatch:
     inputs:
-        issue_number:
+        issue-number:
             description: 'Issue to triage (issue number)'
             required: true
   schedule:
@@ -57,5 +57,6 @@ jobs:
               }
             ]
           default-assignee: 'yaouDev'
+          issue-index: ${{ inputs.issue-number }}
         env:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

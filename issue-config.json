@@ -40,11 +40,11 @@
   "assignments": [
     {
       "keywords": ["bug", "error", "crash"],
-      "assignees": ["yaouDev", "alice"]
+      "assignees": ["yaouDev"]
     },
     {
       "keywords": ["feature", "enhancement", "new functionality"],
-      "assignees": ["yaouDev", "bob"]
+      "assignees": ["yaouDev"]
     },
     {
       "keywords": ["documentation", "docs"],
@@ -56,7 +56,7 @@
     },
     {
       "keywords": ["critical", "security"],
-      "assignees": ["security-team"]
+      "assignees": []
     }
   ],
   "defaultAssignee": "yaouDev"

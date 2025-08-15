@@ -33,6 +33,9 @@ fi
 # load the json config once
 CONFIG_JSON=$(cat "$CONFIG_FILE")
 
+# extract default assignee from config
+DEFAULT_ASSIGNEE=$(echo "$CONFIG_JSON" | jq -r '.defaultAssignee // empty')
+
 # function to check and create labels if missing
 ensure_label_exists() {
     local label="$1"
@@ -59,9 +62,10 @@ CURRENT_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees --jq '.assign
 
 echo "Processing issue #$ISSUE_NUMBER: '$ISSUE_TITLE'"
 
+# case-insensitive, exact match label check
 has_label() {
     local label="$1"
-    echo "$ISSUE_LABELS" | grep -q "^$label$"
+    echo "$ISSUE_LABELS" | awk '{print tolower($0)}' | grep -qxF "$(echo "$label" | awk '{print tolower($0)}')"
 }
 
 has_assignees() {
@@ -185,6 +189,7 @@ if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_P
                 fi
 
                 if [[ "$matched" == "true" && -n "$rule_assignees" ]]; then
+                    echo "Matched assignment rule: labels=[$rule_labels], keywords=[$rule_keywords], assignees=[$rule_assignees]"
                     ASSIGNED_TO=$(pick_least_busy_assignee "$rule_assignees")
                     break
                 fi
@@ -193,11 +198,11 @@ if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_P
         fi
 
         if [ -n "$ASSIGNED_TO" ]; then
-        echo "Assigning to $ASSIGNED_TO based on matched rule."
-        gh issue edit "$ISSUE_NUMBER" --add-assignee "$ASSIGNED_TO"
+            echo "Assigning to $ASSIGNED_TO based on matched rule."
+            gh issue edit "$ISSUE_NUMBER" --add-assignee "$ASSIGNED_TO"
         elif [ -n "$DEFAULT_ASSIGNEE" ]; then
-        echo "No match found. Assigning to default: $DEFAULT_ASSIGNEE"
-        gh issue edit "$ISSUE_NUMBER" --add-assignee "$DEFAULT_ASSIGNEE"
+            echo "No match found. Assigning to default: $DEFAULT_ASSIGNEE"
+            gh issue edit "$ISSUE_NUMBER" --add-assignee "$DEFAULT_ASSIGNEE"
         fi
     fi
 fi

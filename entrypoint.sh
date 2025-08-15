@@ -53,6 +53,21 @@ has_assignees() {
     [ -n "$CURRENT_ASSIGNEES" ]
 }
 
+has_keyword() {
+    local keywords_csv="$1"
+    local issue_text="${ISSUE_TITLE,,} ${ISSUE_BODY,,}"
+
+    IFS=',' read -ra keywords <<< "$keywords_csv"
+    for kw in "${keywords[@]}"; do
+        kw="${kw,,}"
+        if [[ "$issue_text" =~ $kw ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+
 if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_EVENT_PATH")" == "opened" || "$(jq --raw-output .action "$GITHUB_EVENT_PATH")" == "reopened") ]]; then
 
     echo "Performing automatic categorization..."

@@ -134,6 +134,9 @@ if [[ "$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$GITHUB_E
             echo "$least_busy_assignee"
         }
 
+        # debug
+        echo "INPUT_ASSIGNMENT_RULES: $INPUT_ASSIGNMENT_RULES"
+
         ASSIGNED_TO=""
         if [[ -n "$INPUT_ASSIGNMENT_RULES" ]]; then
             echo "$INPUT_ASSIGNMENT_RULES" | jq -c '.[]' | while read -r rule; do

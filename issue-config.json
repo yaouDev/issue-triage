@@ -35,6 +35,12 @@
       "color": "fef2c0",
       "description": "Needs more input from the author",
       "keywords": []
+    },
+    {
+      "name": "debug label",
+      "color": "141414",
+      "description": "debug label (:",
+      "keywords": ["debug"]
     }
   ],
   "assignments": [

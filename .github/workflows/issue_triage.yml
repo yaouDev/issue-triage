@@ -6,15 +6,14 @@ on:
   issues:
     types: [opened, reopened]
 
-permissions:
-  issues: write
-  pull-requests: write
-  repository-projects: read
-  contents: read
-
 jobs:
   triage:
     runs-on: ubuntu-latest
+    permissions:
+        issues: write
+        pull-requests: write
+        repository-projects: read
+        contents: read
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4

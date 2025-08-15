@@ -22,20 +22,21 @@ if ! gh auth status > /dev/null 2>&1; then
     exit 1
 fi
 
-echo "Checking repository permissions..."
-
-REPO_PERMS=$(gh api repos/"$GITHUB_REPOSITORY" --jq .permissions)
-ISSUES_WRITE=$(echo "$REPO_PERMS" | jq -r '.issues')
-PUSH_ACCESS=$(echo "$REPO_PERMS" | jq -r '.push')
-
-echo "Permissions for $GITHUB_REPOSITORY: $REPO_PERMS"
-
-if [[ "$ISSUES_WRITE" != "true" && "$PUSH_ACCESS" != "true" ]]; then
-  echo "Error: GH_TOKEN does not have 'issues: write' or 'push' permissions. Please ensure:"
-  echo "  - Your workflow requests these permissions explicitly"
-  echo "  - Repo settings allow workflows 'Read and write' access"
-  exit 1
-fi
+# This permissions check might not work with GITHUB_TOKEN
+#echo "Checking repository permissions..."
+#
+#REPO_PERMS=$(gh api repos/"$GITHUB_REPOSITORY" --jq .permissions)
+#ISSUES_WRITE=$(echo "$REPO_PERMS" | jq -r '.issues')
+#PUSH_ACCESS=$(echo "$REPO_PERMS" | jq -r '.push')
+#
+#echo "Permissions for $GITHUB_REPOSITORY: $REPO_PERMS"
+#
+#if [[ "$ISSUES_WRITE" != "true" && "$PUSH_ACCESS" != "true" ]]; then
+#  echo "Error: GH_TOKEN does not have 'issues: write' or 'push' permissions. Please ensure:"
+#  echo "  - Your workflow requests these permissions explicitly"
+#  echo "  - Repo settings allow workflows 'Read and write' access"
+#  exit 1
+#fi
 
 
 

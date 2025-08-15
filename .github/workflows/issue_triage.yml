@@ -40,6 +40,8 @@ jobs:
             echo "Triggering triage for issue #$issue"
             gh issue comment "$issue" --body "Running triage..."
           done
+        env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     
       - name: Advanced Issue Triage

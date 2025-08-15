@@ -8,6 +8,9 @@ set -euo pipefail
 export GH_TOKEN="${GH_TOKEN:-}"
 export GITHUB_TOKEN="$GH_TOKEN"
 
+# this is necessary to trust the runner
+git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
 echo "Verifying GH_TOKEN..."
 if [ -z "$GH_TOKEN" ]; then
     echo "Error: GH_TOKEN is not set. The GitHub CLI will not be able to authenticate."

@@ -41,11 +41,17 @@
       "color": "141414",
       "description": "debug label (:",
       "keywords": ["debug"]
+    },
+    {
+      "name": "ACTUAL META ISSUE",
+      "color": "6F3A10",
+      "description": "An actual issue relating to the issue triaging action",
+      "keywords": "actual issue"
     }
   ],
   "assignments": [
     {
-      "labels": ["bug"],
+      "labels": ["bug","ACTUAL META ISSUE"],
       "assignees": ["yaouDev"]
     },
     {

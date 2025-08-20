@@ -52,6 +52,11 @@ if [[ -f "$EVENT_PATH" && "$GITHUB_EVENT_NAME" == "issues" ]]; then
   ISSUE_NUMBER=$(jq -r .issue.number "$EVENT_PATH")
   ISSUE_BODY=$(jq -r .issue.body "$EVENT_PATH")
   ISSUE_TITLE=$(jq -r .issue.title "$EVENT_PATH")
+elif [[ "$GITHUB_EVENT_NAME" == "schedule" ]]; then
+  echo "Scheduled event: skipping single issue triage, proceeding to stale issue processing..."
+  ISSUE_NUMBER=""
+  ISSUE_TITLE=""
+  ISSUE_BODY=""
 else
   ISSUE_NUMBER="${ISSUE_INDEX:?Issue number required}"
   read -r ISSUE_NUMBER ISSUE_TITLE ISSUE_BODY < <(gh issue view "$ISSUE_NUMBER" --json number,title,body --jq '. | "\(.number)\t\(.title)\t\(.body)"')

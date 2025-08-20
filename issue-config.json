@@ -46,7 +46,7 @@
       "name": "ACTUAL META ISSUE",
       "color": "6F3A10",
       "description": "An actual issue relating to the issue triaging action",
-      "keywords": "actual issue"
+      "keywords": ["actual issue"]
     }
   ],
   "assignments": [

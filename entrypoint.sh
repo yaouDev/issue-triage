@@ -99,8 +99,7 @@ if [[ -n "$ISSUE_NUMBER" ]]; then
     issue_text="$(echo "$ISSUE_TITLE
     $ISSUE_BODY" | tr '[:upper:]' '[:lower:]')"
 
-    if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_PATH")" == "opened" || "$(jq --raw-output .action "$EVENT_PATH")" == "reopened")) || ("$GITHUB_EVENT_NAME" == "workflow_dispatch") ]]; then
-
+    triage() {
         echo "Performing automatic categorization based on config..."
 
         labels_count=$(jq '.labels | length' <<< "$CONFIG_JSON")
@@ -214,6 +213,10 @@ if [[ -n "$ISSUE_NUMBER" ]]; then
                 gh issue edit "$ISSUE_NUMBER" --add-assignee "$DEFAULT_ASSIGNEE"
             fi
         fi
+    }
+
+    if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_PATH")" == "opened" || "$(jq --raw-output .action "$EVENT_PATH")" == "reopened")) || ("$GITHUB_EVENT_NAME" == "workflow_dispatch") ]]; then
+        triage
     fi
 fi
 

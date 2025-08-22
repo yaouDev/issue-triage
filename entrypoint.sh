@@ -48,166 +48,171 @@ ensure_label_exists() {
     fi
 }
 
+# initiate info to nothing to check if scheduled event
+ISSUE_NUMBER=""
+ISSUE_TITLE=""
+ISSUE_BODY=""
+
 if [[ -f "$EVENT_PATH" && "$GITHUB_EVENT_NAME" == "issues" ]]; then
   ISSUE_NUMBER=$(jq -r .issue.number "$EVENT_PATH")
   ISSUE_BODY=$(jq -r .issue.body "$EVENT_PATH")
   ISSUE_TITLE=$(jq -r .issue.title "$EVENT_PATH")
-elif [[ "$GITHUB_EVENT_NAME" == "schedule" ]]; then
-  echo "Scheduled event: skipping single issue triage, proceeding to stale issue processing..."
-  ISSUE_NUMBER=""
-  ISSUE_TITLE=""
-  ISSUE_BODY=""
-else
+elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
   ISSUE_NUMBER="${ISSUE_INDEX:?Issue number required}"
   read -r ISSUE_NUMBER ISSUE_TITLE ISSUE_BODY < <(gh issue view "$ISSUE_NUMBER" --json number,title,body --jq '. | "\(.number)\t\(.title)\t\(.body)"')
+elif [[ "$GITHUB_EVENT_NAME" == "schedule" ]]; then
+  echo "Scheduled event: skipping single issue triage, proceeding to stale issue processing..."
 fi
 
-ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels.[].name' || echo "")
-CURRENT_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees --jq '.assignees.[].login' || echo "")
+# check if issue nubmer exists
+if [[ -n "$ISSUE_NUMBER" ]]; then
+    ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels.[].name' || echo "")
+    CURRENT_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees --jq '.assignees.[].login' || echo "")
 
-echo "Processing issue #$ISSUE_NUMBER: '$ISSUE_TITLE'"
+    echo "Processing issue #$ISSUE_NUMBER: '$ISSUE_TITLE'"
 
-# case-insensitive, exact match label check
-has_label() {
-    local label="$1"
-    echo "$ISSUE_LABELS" | awk '{print tolower($0)}' | grep -qxF "$(echo "$label" | awk '{print tolower($0)}')"
-}
+    # case-insensitive, exact match label check
+    has_label() {
+        local label="$1"
+        echo "$ISSUE_LABELS" | awk '{print tolower($0)}' | grep -qxF "$(echo "$label" | awk '{print tolower($0)}')"
+    }
 
-has_assignees() {
-    [ -n "$CURRENT_ASSIGNEES" ]
-}
+    has_assignees() {
+        [ -n "$CURRENT_ASSIGNEES" ]
+    }
 
-has_keyword() {
-    local keywords_csv="$1"
-    local issue_text="${ISSUE_TITLE,,} ${ISSUE_BODY,,}"
+    has_keyword() {
+        local keywords_csv="$1"
+        local issue_text="${ISSUE_TITLE,,} ${ISSUE_BODY,,}"
 
-    IFS=',' read -ra keywords <<< "$keywords_csv"
-    for kw in "${keywords[@]}"; do
-        kw="${kw,,}"
-        if [[ "$issue_text" =~ $kw ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-# lowercase conversion
-issue_text="$(echo "$ISSUE_TITLE
-$ISSUE_BODY" | tr '[:upper:]' '[:lower:]')"
-
-if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_PATH")" == "opened" || "$(jq --raw-output .action "$EVENT_PATH")" == "reopened")) || ("$GITHUB_EVENT_NAME" == "workflow_dispatch") ]]; then
-
-    echo "Performing automatic categorization based on config..."
-
-    labels_count=$(jq '.labels | length' <<< "$CONFIG_JSON")
-    for ((i=0; i<labels_count; i++)); do
-        label_name=$(jq -r ".labels[$i].name" <<< "$CONFIG_JSON")
-        label_color=$(jq -r ".labels[$i].color" <<< "$CONFIG_JSON")
-        label_desc=$(jq -r ".labels[$i].description" <<< "$CONFIG_JSON")
-        keywords_array=$(jq -r ".labels[$i].keywords | join(\",\")" <<< "$CONFIG_JSON")
-
-        if [[ "$keywords_array" == "" && "$label_name" != "needs more info" ]]; then
-            continue
-        fi
-
-        IFS=',' read -ra kws <<< "$keywords_array"
-        for kw in "${kws[@]}"; do
+        IFS=',' read -ra keywords <<< "$keywords_csv"
+        for kw in "${keywords[@]}"; do
             kw="${kw,,}"
             if [[ "$issue_text" =~ $kw ]]; then
-                if ! has_label "$label_name"; then
-                    ensure_label_exists "$label_name" "$label_color" "$label_desc"
-                    echo "Applying label: $label_name"
-                    gh issue edit "$ISSUE_NUMBER" --add-label "$label_name"
-                fi
-                break
+                return 0
             fi
         done
-    done
+        return 1
+    }
 
-    # special case: needs more info label logic
-    min_body_length=100
-    required_phrase="steps to reproduce"
+    # lowercase conversion
+    issue_text="$(echo "$ISSUE_TITLE
+    $ISSUE_BODY" | tr '[:upper:]' '[:lower:]')"
 
-    if (( $(echo -n "$ISSUE_BODY" | wc -m) < min_body_length )) || ! grep -iqF "$required_phrase" <<< "$ISSUE_BODY"; then
-        if ! has_label "needs more info"; then
-            label_info=$(jq -r '.labels[] | select(.name=="needs more info")' <<< "$CONFIG_JSON")
-            label_color=$(jq -r '.color' <<< "$label_info")
-            label_desc=$(jq -r '.description' <<< "$label_info")
-            ensure_label_exists "needs more info" "$label_color" "$label_desc"
-            echo "Applying label: needs more info"
-            gh issue edit "$ISSUE_NUMBER" --add-label "needs more info"
-            gh issue comment "$ISSUE_NUMBER" --body "Thank you for the issue! To help us resolve this, please provide more information, such as 'steps to reproduce' and an expected behavior."
-        fi
-    fi
+    if [[ ("$GITHUB_EVENT_NAME" == "issues" && ("$(jq --raw-output .action "$EVENT_PATH")" == "opened" || "$(jq --raw-output .action "$EVENT_PATH")" == "reopened")) || ("$GITHUB_EVENT_NAME" == "workflow_dispatch") ]]; then
 
-    # dev assignment
-    if ! has_assignees; then
-        echo "Performing automatic assignment..."
+        echo "Performing automatic categorization based on config..."
 
-        pick_least_busy_assignee() {
-            local assignees_string="$1"
-            if [ -z "$assignees_string" ]; then
-                echo ""
-                return
+        labels_count=$(jq '.labels | length' <<< "$CONFIG_JSON")
+        for ((i=0; i<labels_count; i++)); do
+            label_name=$(jq -r ".labels[$i].name" <<< "$CONFIG_JSON")
+            label_color=$(jq -r ".labels[$i].color" <<< "$CONFIG_JSON")
+            label_desc=$(jq -r ".labels[$i].description" <<< "$CONFIG_JSON")
+            keywords_array=$(jq -r ".labels[$i].keywords | join(\",\")" <<< "$CONFIG_JSON")
+
+            if [[ "$keywords_array" == "" && "$label_name" != "needs more info" ]]; then
+                continue
             fi
 
-            IFS=',' read -r -a ASSIGNEE_LIST <<< "$assignees_string"
-            local least_busy_assignee=""
-            local min_issues=-1
-
-            for assignee in "${ASSIGNEE_LIST[@]}"; do
-                local issue_count
-                issue_count=$(gh issue list --search "is:open assignee:$assignee" --json number --jq '.[].number' | wc -l)
-                >&2 echo "  -> $assignee has $issue_count open issues."
-
-                if [[ "$min_issues" -eq -1 || "$issue_count" -lt "$min_issues" ]]; then
-                    min_issues="$issue_count"
-                    least_busy_assignee="$assignee"
+            IFS=',' read -ra kws <<< "$keywords_array"
+            for kw in "${kws[@]}"; do
+                kw="${kw,,}"
+                if [[ "$issue_text" =~ $kw ]]; then
+                    if ! has_label "$label_name"; then
+                        ensure_label_exists "$label_name" "$label_color" "$label_desc"
+                        echo "Applying label: $label_name"
+                        gh issue edit "$ISSUE_NUMBER" --add-label "$label_name"
+                    fi
+                    break
                 fi
             done
+        done
 
-            echo "$least_busy_assignee"
-        }
+        # special case: needs more info label logic
+        min_body_length=100
+        required_phrase="steps to reproduce"
 
-        echo "Checking assignment rules..."
-        ASSIGNED_TO=""
+        if (( $(echo -n "$ISSUE_BODY" | wc -m) < min_body_length )) || ! grep -iqF "$required_phrase" <<< "$ISSUE_BODY"; then
+            if ! has_label "needs more info"; then
+                label_info=$(jq -r '.labels[] | select(.name=="needs more info")' <<< "$CONFIG_JSON")
+                label_color=$(jq -r '.color' <<< "$label_info")
+                label_desc=$(jq -r '.description' <<< "$label_info")
+                ensure_label_exists "needs more info" "$label_color" "$label_desc"
+                echo "Applying label: needs more info"
+                gh issue edit "$ISSUE_NUMBER" --add-label "needs more info"
+                gh issue comment "$ISSUE_NUMBER" --body "Thank you for the issue! To help us resolve this, please provide more information, such as 'steps to reproduce' and an expected behavior."
+            fi
+        fi
 
-        if [[ -n "$CONFIG_JSON" ]]; then
-            while read -r rule; do
-                rule_labels=$(echo "$rule" | jq -r '.labels // [] | @csv' | tr -d '"')
-                rule_keywords=$(echo "$rule" | jq -r '.keywords // [] | @csv' | tr -d '"')
-                rule_assignees=$(echo "$rule" | jq -r '.assignees | join(",")')
+        # dev assignment
+        if ! has_assignees; then
+            echo "Performing automatic assignment..."
 
-                matched=false
+            pick_least_busy_assignee() {
+                local assignees_string="$1"
+                if [ -z "$assignees_string" ]; then
+                    echo ""
+                    return
+                fi
 
-                for lbl in $(echo "$rule_labels" | tr ',' '\n'); do
-                    if has_label "$lbl"; then
-                        matched=true
-                        break
+                IFS=',' read -r -a ASSIGNEE_LIST <<< "$assignees_string"
+                local least_busy_assignee=""
+                local min_issues=-1
+
+                for assignee in "${ASSIGNEE_LIST[@]}"; do
+                    local issue_count
+                    issue_count=$(gh issue list --search "is:open assignee:$assignee" --json number --jq '.[].number' | wc -l)
+                    >&2 echo "  -> $assignee has $issue_count open issues."
+
+                    if [[ "$min_issues" -eq -1 || "$issue_count" -lt "$min_issues" ]]; then
+                        min_issues="$issue_count"
+                        least_busy_assignee="$assignee"
                     fi
                 done
 
-                if [[ "$matched" == "false" && -n "$rule_keywords" ]]; then
-                    if has_keyword "$rule_keywords"; then
-                        matched=true
+                echo "$least_busy_assignee"
+            }
+
+            echo "Checking assignment rules..."
+            ASSIGNED_TO=""
+
+            if [[ -n "$CONFIG_JSON" ]]; then
+                while read -r rule; do
+                    rule_labels=$(echo "$rule" | jq -r '.labels // [] | @csv' | tr -d '"')
+                    rule_keywords=$(echo "$rule" | jq -r '.keywords // [] | @csv' | tr -d '"')
+                    rule_assignees=$(echo "$rule" | jq -r '.assignees | join(",")')
+
+                    matched=false
+
+                    for lbl in $(echo "$rule_labels" | tr ',' '\n'); do
+                        if has_label "$lbl"; then
+                            matched=true
+                            break
+                        fi
+                    done
+
+                    if [[ "$matched" == "false" && -n "$rule_keywords" ]]; then
+                        if has_keyword "$rule_keywords"; then
+                            matched=true
+                        fi
                     fi
-                fi
 
-                if [[ "$matched" == "true" && -n "$rule_assignees" ]]; then
-                    echo "Matched assignment rule: labels=[$rule_labels], keywords=[$rule_keywords], assignees=[$rule_assignees]"
-                    ASSIGNED_TO=$(pick_least_busy_assignee "$rule_assignees")
-                    break
-                fi
+                    if [[ "$matched" == "true" && -n "$rule_assignees" ]]; then
+                        echo "Matched assignment rule: labels=[$rule_labels], keywords=[$rule_keywords], assignees=[$rule_assignees]"
+                        ASSIGNED_TO=$(pick_least_busy_assignee "$rule_assignees")
+                        break
+                    fi
 
-            done < <(echo "$CONFIG_JSON" | jq -c '.assignments[]')
-        fi
+                done < <(echo "$CONFIG_JSON" | jq -c '.assignments[]')
+            fi
 
-        if [ -n "$ASSIGNED_TO" ]; then
-            echo "Assigning to $ASSIGNED_TO based on matched rule."
-            gh issue edit "$ISSUE_NUMBER" --add-assignee "$ASSIGNED_TO"
-        elif [ -n "$DEFAULT_ASSIGNEE" ]; then
-            echo "No match found. Assigning to default: $DEFAULT_ASSIGNEE"
-            gh issue edit "$ISSUE_NUMBER" --add-assignee "$DEFAULT_ASSIGNEE"
+            if [ -n "$ASSIGNED_TO" ]; then
+                echo "Assigning to $ASSIGNED_TO based on matched rule."
+                gh issue edit "$ISSUE_NUMBER" --add-assignee "$ASSIGNED_TO"
+            elif [ -n "$DEFAULT_ASSIGNEE" ]; then
+                echo "No match found. Assigning to default: $DEFAULT_ASSIGNEE"
+                gh issue edit "$ISSUE_NUMBER" --add-assignee "$DEFAULT_ASSIGNEE"
+            fi
         fi
     fi
 fi
@@ -227,7 +232,7 @@ if [[ "$GITHUB_EVENT_NAME" == "schedule" ]]; then
 
         gh issue list --search "state:open -label:stale -label:bug -label:enhancement" --limit 100 --json number --jq '.[].number' | while read -r issue_num; do
             last_updated=$(gh issue view "$issue_num" --json updatedAt --jq '.updatedAt')
-            last_updated_ts=$(date -d "$last_updated" +%s)
+            last_updated_ts=$(date -d "$(echo "$last_updated" | sed 's/T/ /;s/Z//')" +%s)
             current_ts=$(date +%s)
             days_ago=$(( (current_ts - last_updated_ts) / 86400 ))
 
@@ -246,7 +251,7 @@ if [[ "$GITHUB_EVENT_NAME" == "schedule" ]]; then
             issue_num=$(echo "$issue_json" | jq -r '.number')
 
             updated_at=$(echo "$issue_json" | jq -r '.updatedAt')
-            updated_ts=$(date -d "$updated_at" +%s)
+            updated_ts=$(date -d "$(echo "$updated_at" | sed 's/T/ /;s/Z//')" +%s)
             current_ts=$(date +%s)
             days_since_update=$(( (current_ts - updated_ts) / 86400 ))
 

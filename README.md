@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Advanced Issue Triage
-        uses: yaouDev@issue-triage@v1 # Replace with your action's path and version
+        uses: yaouDev@issue-triage@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           stale-days: 30
